@@ -1,26 +1,42 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Fragment, useEffect, useContext } from "react";
+import { TaskStoreContext } from "./taskStore";
+import TasksList from "./features/TasksList";
+import { Segment, Grid } from "semantic-ui-react";
+import { observer } from "mobx-react-lite";
 
 const App = () => {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+  const taskStore = useContext(TaskStoreContext);
+  const { tasksByDate, overdueTasks, doneTasks } = taskStore;
 
-export default App;
+  useEffect(() => {
+    taskStore.loadTasks();
+  }, [taskStore]);
+
+  return (
+    <Segment attached>
+      <Grid stackable>
+        <Grid.Column width={8}>
+          <Fragment>
+            {tasksByDate.length === 0 ? (
+              <Fragment key="Default">
+                <TasksList addable tasks={[]} group="Today" />
+              </Fragment>
+            ) : (
+              tasksByDate.map(([group, appTasks]) => (
+                <Fragment key={group}>
+                  <TasksList addable tasks={appTasks} group={group} />
+                </Fragment>
+              ))
+            )}
+          </Fragment>
+        </Grid.Column>
+        <Grid.Column width={8}>
+          <TasksList tasks={overdueTasks} group="Overdue" />
+          <TasksList tasks={doneTasks} group="Done" />
+        </Grid.Column>
+      </Grid>
+    </Segment>
+  );
+};
+
+export default observer(App);
